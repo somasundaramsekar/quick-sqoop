@@ -4,13 +4,12 @@
 > **Note**: Choose appropriate version, Do not use sqoop2 as it is not
 > officially GA and may never be
 
-    ~$ wget http://apache.arvixe.com/sqoop/1.4.6/sqoop-1.4.6.bin__
-    hadoop-2.0.4-alpha.tar.gz
-    ~$ sudo mv sqoop-1.4.6.bin__hadoop-2.0.4-alpha.tar.gz /srv/
-    ~$ cd /srv
-    /srv$ sudo tar -xvf sqoop-1.4.6.bin__hadoop-2.0.4-alpha.tar.gz
-    /srv$ sudo chown -R hadoop:hadoop sqoop-1.4.6.bin__hadoop-2.0.4-alpha
-    /srv$ sudo ln -s $(pwd)/sqoop-1.4.6.bin__hadoop-2.0.4-alpha $(pwd)/sqoop
+    $ wget http://apache.arvixe.com/sqoop/1.4.6/sqoop-1.4.6.bin__hadoop-2.0.4-alpha.tar.gz
+    $ sudo mv sqoop-1.4.6.bin__hadoop-2.0.4-alpha.tar.gz /srv/
+    $ cd /srv
+    $ sudo tar -xvf sqoop-1.4.6.bin__hadoop-2.0.4-alpha.tar.gz
+    $ sudo chown -R hadoop:hadoop sqoop-1.4.6.bin__hadoop-2.0.4-alpha
+    $ sudo ln -s $(pwd)/sqoop-1.4.6.bin__hadoop-2.0.4-alpha $(pwd)/sqoop
 
 > **NOTE**: If you feel setting up your own cluster is overwhelming, download and use [Cloudera Quickstart
 > VM](https://www.cloudera.com/downloads/quickstart_vms/5-8.html) and skip the setup part, Quickstart vm setup is as simple as download the archive file for virtual box and choosing **File --> Import Appliance --> [Choose the extracted vmdk file]** 
@@ -20,13 +19,13 @@
 
 Use user hadoop and configure environment
 
-    /srv$ sudo su hadoop
+    $ sudo su hadoop
     
     $ vim ~/.bashrc
     
     # add Sqoop aliases in bashrc
-    export SQOOP_HOME=/srv/sqoop
-    export PATH=$PATH:$SQOOP_HOME/bin
+    $ export SQOOP_HOME=/srv/sqoop
+    $ export PATH=$PATH:$SQOOP_HOME/bin
    
     $ source ~/.bashrc
 
@@ -35,8 +34,8 @@ Use user hadoop and configure environment
 
 verify installation 
 
-    /srv$ cd $SQOOP_HOME
-    /srv/sqoop$ sqoop help
+    $ cd $SQOOP_HOME
+    $ sqoop help
     
     15/06/04 21:57:40 INFO sqoop.Sqoop: Running Sqoop version: 1.4.6
     usage: sqoop COMMAND [ARGS]
@@ -63,6 +62,7 @@ If you see any warnings displayed pertaining to HCatalog, you can safely ignore 
 #Importing with Sqoop
 
 **Simple import**
+Sqoop provides import tools to import from your DB to HDFS, Sqoop by default uses JDBC for connecting to the target DB, hence any DB with a JDBC driver can be used with sqoop.
 
     sqoop import \
       --connect jdbc:mysql://mysql.example.com/sqoop \
