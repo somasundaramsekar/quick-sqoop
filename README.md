@@ -165,6 +165,7 @@ First create a password file, that is read-only for the user who is creating the
 --direct uses native utilities, if provided my the DB vendor to perform the transfer, ex. mysqldump
 
 **Type mapping**
+
 Sqoop lets you map type between the DB and HDFS, this ensures any type incompatibility that may arise are handled at the data ingestion itself
 
     sqoop import \
@@ -176,6 +177,7 @@ Sqoop lets you map type between the DB and HDFS, this ensures any type incompati
       --compress \
       -P
 **Controlling Parallelism**
+
 Sqoop lets you control parallelism by increasing the number of mappers that will read from DB, that is concurrent tasks that will be executed against the DB, it may not always have desired effect, as it can increase the load and may adversely affect the performance, however if sqoop can find that there are no enough data to run given parallel task, it will fall back to the default number
 
     sqoop import \
@@ -186,6 +188,7 @@ Sqoop lets you control parallelism by increasing the number of mappers that will
       --num-mappers 10 \
       -P
 **Importing null**
+
 by default sqoop imports null as string 'null', but that may differ between environments and your target format and storage, to handle sqoop provides --null-string and --null-non-string options, by default HDFS represents nulls as \N so the null has to be mapped to \N when importing to HDFS
 
     sqoop import \
@@ -198,6 +201,7 @@ by default sqoop imports null as string 'null', but that may differ between envi
       -P
 
 **Import all tables**
+
 Sqoop allows import of entire database with a single command
 
     sqoop import-all-tables \
@@ -216,6 +220,7 @@ Sqoop allows import of entire database with a single command
 > 2. --target-dir which is used to specify data dir for a single table can no longer be used, use --warehouse-dir instead to specify target dir for all the tables
 
 **Incremental Import**
+
 It is always necessary and pertinent that, there should always be a way to incrementally import changes rather that importing the whole database everytime we import data into HDFS, importing only the deltas will save a load on both DB and HDFS 
 
 sqoop provides `--incremental` option for this purpose, and it comes with two modes
@@ -252,6 +257,7 @@ The command runs two jobs, one to import all the matching rows into a temp locat
 `--merge-key` specify the key to used for merging the modifications 
 
 **Sqoop Jobs**
+
 Sqoop jobs lets you automate the incremental imports by allowing sqoop to preserve the state of the job and reexecute from the last saved state, thus in this case saving the `--last-value` across executions, thus reducing the manual overhead.
 
     sqoop job \
@@ -278,6 +284,7 @@ execute a job
     sqoop job --exec visits
 
 ** Configuring metastore**
+
 You can configure metastore to use a persistent DB like mysql in sqoop-site.xml
 
     <configuration>
@@ -297,6 +304,7 @@ and the sqoop clients running across machines can use this metastore by
       --table visits
       ...
 **Import with Free form queries**
+
 It is possible to import with free form queries, specially useful if you have a normalized set of tables and you want to import materialized (denormalized) view of the table into Hadoop, you replace the `--table` with `--query`.
 
 > **Note**: try avoiding complex queries however as they unnecessary overhead to your ETL, materialize the query into a temp table and import from the temp table.
