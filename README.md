@@ -62,6 +62,7 @@ If you see any warnings displayed pertaining to HCatalog, you can safely ignore 
 #Importing with Sqoop
 
 **Simple import**
+
 Sqoop provides import tools to import from your DB to HDFS, Sqoop by default uses JDBC for connecting to the target DB, hence any DB with a JDBC driver can be used with sqoop.
 
     sqoop import \
@@ -101,6 +102,7 @@ Use the command-line parameter --where to specify a SQL condition that the impor
 > --target-dir parameter. The only requirement is that this directory must not exist prior to running the Sqoop command.
 
 **Protecting the password**
+
 The mysql password as plain text is not recommended approach, there are a couple of alternatives, reading the password from the stdin
 
     sqoop import \
@@ -327,4 +329,76 @@ The `$CONDITIONS` given with the where clause in `--query` will be used by the m
 
 > **NOTE**: To avoid ambiguity in column names across tables while using free-form queries, assign alias to the column names
 
+#Export
+Sqoop also let's you export data from HDFS onto your DB. To do so the table must already exist in your DB and it need not be empty, but the data you are offloading shouldn't violate any constraint
+
+    sqoop export \
+      -Dsqoop.export.records.per.statement=10 \
+      -Dsqoop.export.statements.per.transaction=10 \
+      --connect jdbc:mysql://localhost/sqoop_export \
+      --username sqoop \
+      --password-file /user/$USER/.password \
+      --table cities \
+      --export-dir /etl/input/cities \
+      --staging-table staging_cities \
+      --batch \
+      --clear-staging-table
+sqoop uses `export` tool to export the data, you specify the `--table` to export and the HDFS directory from which it is supposed to export using `--export-dir` , by default the export happens row-by-row which has a lot of overhead interms of connections and transactions, to workaround that use `--batch` which batches multiple rows into a single statement, you could also control the number of rows sent per query using `-Dsqoop.export.records.per.statement=10` and number of rows to be inserted before the transaction is committed using `-Dsqoop.export.statements.per.transaction=10`, these 3 parameters lets you optimize the inserts based on the underlying DB.
+
+`--staging-table` lets you specify a staging table, which should be as same as the target table interms of columns and column definitions, the records are inserted into staging table first, once all the mapreduce jobs are successfully completed, the rows are then transferred to the target table. `--clear-staging-table` ensures the staging table is truncated (if supported by the DB) before the export.
+
+**Update**
+
+If the data in the HDFS is mutable, sqoop provides mechanism to update the existing data
+
+    sqoop export \
+    	-Dsqoop.export.records.per.statement=10 \
+    	-Dsqoop.export.statements.per.transaction=10 \
+    	--connect jdbc:mysql://localhost/sqoop_export \
+    	--username sqoop \
+    	--password-file /user/$USER/.password \
+    	--table cities \
+    	--export-dir /etl/input/cities \
+    	--update-key id \
+    	--update-mode allowinsert \
+    	--batch
+`--update-key` can be used to specify a comma separated list of columns to be used as the look-up key for the row selection. Ex. if a table has columns c1, c2, c3, c4 and `--update-key c3,c4` is given the resulting `UPDATE` would be 
+
+    UPDATE table SET c1 = ?, c2 = ? WHERE c3 = ? and c4 = ?
+
+The lookup values, obviously need not be altered.
+
+If there is a case where there are new columns are added to the source HDFS file, it will not be exported as a part of the UPDATE(of-course!!!), to handle this use `--update-mode allowinsert` , to use this feature however it must be supported by the target DB, right now Oracle and Mysql (without `--direct` mode). The update cannot be used arbitrary updates, however, only solution is to truncate the target table and do a full export.
+
+**Exporting only a subset of columns**
+
+If there is a mismatch between the HDFS data and the target table we can use `--columns` to specify the comma separated list of columns to export, given the target DB supports specifying list of columns during INSERT.
+
+    sqoop export \
+    	-Dsqoop.export.records.per.statement=10 \
+    	-Dsqoop.export.statements.per.transaction=10 \
+    	--connect jdbc:mysql://localhost/sqoop_export \
+    	--username sqoop \
+    	--password-file /user/$USER/.password \
+    	--table cities \
+    	--export-dir /etl/input/cities \
+    	--columns id,country,city \
+    	--update-key id \
+    	--update-mode allowinsert \
+		--input-null-string '\\N' \
+	    --input-null-non-string '\\N' \
+    	--batch 
+additionally the target table must either allow or have a default value configured. 
+
+Like `import`, `export` also allows you to specify the null character encoding using `--input-null-string` for string based columns and `--input-null-non-string` for non-string based columns.
+
+**Using Stored Procedures**
+
+    sqoop export \
+      --connect jdbc:mysql://localhost/sqoop \
+      --username sqoop \
+      --password sqoop \
+      --call populate_cities
+      
+you can use stored procedures to export instead of `--table` the SP will be called with the number of columns returned from HDFS data, in that order. Be aware of the overhead that SP may cause if it is resource intensive as SP will be called multiple times by mappers running in parallel. 
 

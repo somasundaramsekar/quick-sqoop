@@ -20,11 +20,15 @@ CREATE USER 'sqoop'@'%' IDENTIFIED BY 'sqoop';
 -- Create new database sqoop
 CREATE DATABASE sqoop;
 
+CREATE DATABASE sqoop_export;
+
 -- Grant all privileges to the new database to created user
 GRANT ALL ON sqoop.* to 'sqoop'@'%';
+GRANT ALL ON sqoop_export.* to 'sqoop'@'%';
 
 -- in case MySQL runs on local machine
 CREATE USER 'sqoop'@'localhost' IDENTIFIED BY 'sqoop';
 GRANT ALL ON sqoop.* TO 'sqoop'@'localhost';
+GRANT ALL ON sqoop_export.* TO 'sqoop'@'localhost';
 
 
