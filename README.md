@@ -61,8 +61,13 @@ If you see any warnings displayed pertaining to HCatalog, you can safely ignore 
 
 #Importing with Sqoop
 
-**Simple import**
+> **NOTE**: Use the command  hadoop fs -rmr /etl/input/* to clear the HDFS data, for a clean run on the hands-on excercises.
 
+> **NOTE**: Import excercise seed data and users by login to mysql with 
+> '$ mysql -u root -p' password is cloudera, after login execute mysql> source /path/to/file/mysql.credentials.sql and mysql> source /path/to/file/mysql.tables.sql
+
+
+##Simple import
 Sqoop provides import tools to import from your DB to HDFS, Sqoop by default uses JDBC for connecting to the target DB, hence any DB with a JDBC driver can be used with sqoop.
 
     sqoop import \
@@ -101,7 +106,7 @@ Use the command-line parameter --where to specify a SQL condition that the impor
 > be changed to any arbitrary directory on your HDFS using the
 > --target-dir parameter. The only requirement is that this directory must not exist prior to running the Sqoop command.
 
-**Protecting the password**
+##Protecting the password
 
 The mysql password as plain text is not recommended approach, there are a couple of alternatives, reading the password from the stdin
 
@@ -129,7 +134,7 @@ First create a password file, that is read-only for the user who is creating the
           --password-file /user/$USER/.password \
           --table cities
 
-**Import as binary**
+##Import as binary
 
     sqoop import \
       --connect jdbc:mysql://localhost/sqoop \
@@ -145,7 +150,8 @@ First create a password file, that is read-only for the user who is creating the
       --table cities \
       --as-avrodatafile \
       --target-dir /etl/input/cities-avro 
-**Compressing**
+	  
+##Compress
 
 
      #With default gz compression
@@ -166,7 +172,7 @@ First create a password file, that is read-only for the user who is creating the
       --direct
 --direct uses native utilities, if provided my the DB vendor to perform the transfer, ex. mysqldump
 
-**Type mapping**
+##Type mapping
 
 Sqoop lets you map type between the DB and HDFS, this ensures any type incompatibility that may arise are handled at the data ingestion itself
 
@@ -178,7 +184,9 @@ Sqoop lets you map type between the DB and HDFS, this ensures any type incompati
       --target-dir /etl/input/cities \
       --compress \
       -P
-**Controlling Parallelism**
+	  
+
+##Controlling Parallelism
 
 Sqoop lets you control parallelism by increasing the number of mappers that will read from DB, that is concurrent tasks that will be executed against the DB, it may not always have desired effect, as it can increase the load and may adversely affect the performance, however if sqoop can find that there are no enough data to run given parallel task, it will fall back to the default number
 
@@ -189,7 +197,8 @@ Sqoop lets you control parallelism by increasing the number of mappers that will
       --target-dir /etl/input/cities \
       --num-mappers 10 \
       -P
-**Importing null**
+	  
+##Importing null
 
 by default sqoop imports null as string 'null', but that may differ between environments and your target format and storage, to handle sqoop provides --null-string and --null-non-string options, by default HDFS represents nulls as \N so the null has to be mapped to \N when importing to HDFS
 
@@ -202,7 +211,7 @@ by default sqoop imports null as string 'null', but that may differ between envi
       --null-non-string '\\N' \
       -P
 
-**Import all tables**
+##Import all tables
 
 Sqoop allows import of entire database with a single command
 
@@ -221,7 +230,7 @@ Sqoop allows import of entire database with a single command
     comma-separated list of table names
 > 2. --target-dir which is used to specify data dir for a single table can no longer be used, use --warehouse-dir instead to specify target dir for all the tables
 
-**Incremental Import**
+##Incremental Import
 
 It is always necessary and pertinent that, there should always be a way to incrementally import changes rather that importing the whole database everytime we import data into HDFS, importing only the deltas will save a load on both DB and HDFS 
 
@@ -229,7 +238,9 @@ sqoop provides `--incremental` option for this purpose, and it comes with two mo
 1. append
 2. lastmodified
 
-**append**: append is for immutable tables, that just adds new record and does not modifies the existing records, ex: audit tables, log tables etc.
+**append**
+
+append is for immutable tables, that just adds new record and does not modifies the existing records, ex: audit tables, log tables etc.
 
     sqoop import \
       --connect jdbc:mysql://localhost/sqoop \
@@ -242,7 +253,9 @@ sqoop provides `--incremental` option for this purpose, and it comes with two mo
       --last-value 1
 the above command will import all the rows after the specified `--last-value` of 1 from the `--check-column` id
 
-**lastmodified**: is used for mutable tables, it imports all rows whose timestamp column specified with `--check-column`, date or time values if greater than the value specified with the `--last-value` option
+**lastmodified**
+
+Is used for mutable tables, it imports all rows whose timestamp column specified with `--check-column`, date or time values if greater than the value specified with the `--last-value` option
 The command runs two jobs, one to import all the matching rows into a temp location and second to merge the values imported with the current values
 
     sqoop import \
@@ -258,7 +271,7 @@ The command runs two jobs, one to import all the matching rows into a temp locat
   
 `--merge-key` specify the key to used for merging the modifications 
 
-**Sqoop Jobs**
+##Sqoop Jobs
 
 Sqoop jobs lets you automate the incremental imports by allowing sqoop to preserve the state of the job and reexecute from the last saved state, thus in this case saving the `--last-value` across executions, thus reducing the manual overhead.
 
@@ -285,7 +298,7 @@ execute a job
 
     sqoop job --exec visits
 
-** Configuring metastore**
+##Configuring metastore
 
 You can configure metastore to use a persistent DB like mysql in sqoop-site.xml
 
@@ -305,7 +318,8 @@ and the sqoop clients running across machines can use this metastore by
       import \
       --table visits
       ...
-**Import with Free form queries**
+	  
+##Import with Free form queries
 
 It is possible to import with free form queries, specially useful if you have a normalized set of tables and you want to import materialized (denormalized) view of the table into Hadoop, you replace the `--table` with `--query`.
 
@@ -347,7 +361,7 @@ sqoop uses `export` tool to export the data, you specify the `--table` to export
 
 `--staging-table` lets you specify a staging table, which should be as same as the target table interms of columns and column definitions, the records are inserted into staging table first, once all the mapreduce jobs are successfully completed, the rows are then transferred to the target table. `--clear-staging-table` ensures the staging table is truncated (if supported by the DB) before the export.
 
-**Update**
+##Updates
 
 If the data in the HDFS is mutable, sqoop provides mechanism to update the existing data
 
