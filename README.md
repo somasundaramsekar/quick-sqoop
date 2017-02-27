@@ -1,3 +1,27 @@
+Apache Sqoop
+=================
+
+Table of Contents
+-----------------
+
+   * [Getting Started](#getting-started)
+   * [Importing with Sqoop](#importing-with-sqoop)
+      * [Simple import](#simple-import)
+      * [Protecting the password](#protecting-the-password)
+      * [Import as binary](#import-as-binary)
+      * [Compress](#compress)
+      * [Using --direct to speed up transfer](#using---direct-to-speed-up-transfer)
+      * [Type mapping](#type-mapping)
+      * [Controlling Parallelism](#controlling-parallelism)
+      * [Importing null](#importing-null)
+      * [Import all tables](#import-all-tables)
+      * [Incremental Import](#incremental-import)
+      * [Sqoop Jobs](#sqoop-jobs)
+      * [Configuring metastore](#configuring-metastore)
+      * [Import with Free form queries](#import-with-free-form-queries)
+   * [Exporting with Sqoop](#exporting-with-sqoop)
+      * [Updates](#updates)
+
 #Getting Started
 **Download and Install Sqoop**
 
