@@ -136,6 +136,8 @@ First create a password file, that is read-only for the user who is creating the
 
 ##Import as binary
 
+Hadoop supports various binary formats like Sequencefile, Avro, Parquet etc, the hadoop supported binary formats can be efficiently split, allowing you to run MapReduce or Spark jobs on the data efficiently(in parallel) across the cluster.
+
     sqoop import \
       --connect jdbc:mysql://localhost/sqoop \
       --username sqoop \
@@ -153,6 +155,7 @@ First create a password file, that is read-only for the user who is creating the
 	  
 ##Compress
 
+Compressed files occupy less storage space, but with a caveat, compressed files except LZO, bz2 cannot be split and hence disallow parallel processing on the HDFS data.
 
      #With default gz compression
      $ sqoop import --connect jdbc:mysql://localhost/sqoop --username sqoop --target-dir /etl/input/cities --table cities --compress -P
@@ -163,13 +166,14 @@ First create a password file, that is read-only for the user who is creating the
 
 > **Note**: if in the mapred-site.xml file, the property mapred.output.compress is set to false with the final flag, then Sqoop won’t be able to compress the output files even when you call it with the --compress parameter
 
-**Using --direct to speed up transfer**
+##Using --direct to speed up transfer
 
     sqoop import \
       --connect jdbc:mysql://localhost/sqoop \
       --username sqoop \
       --table cities \
       --direct
+	  
 --direct uses native utilities, if provided my the DB vendor to perform the transfer, ex. mysqldump
 
 ##Type mapping
@@ -343,7 +347,7 @@ The `$CONDITIONS` given with the where clause in `--query` will be used by the m
 
 > **NOTE**: To avoid ambiguity in column names across tables while using free-form queries, assign alias to the column names
 
-#Export
+#Exporting with Sqoop
 Sqoop also let's you export data from HDFS onto your DB. To do so the table must already exist in your DB and it need not be empty, but the data you are offloading shouldn't violate any constraint
 
     sqoop export \
